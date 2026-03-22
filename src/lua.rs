@@ -2,7 +2,7 @@ use std::{fs, io::Error};
 
 use mlua::prelude::*;
 
-use crate::{expect::Expect, registry::TestRegistry};
+use crate::{expect::Expect, http::HttpClient, registry::TestRegistry};
 
 pub fn load_lua(path: &str) -> Result<String, Error> {
     let lua_content = fs::read_to_string(path)?;
@@ -20,6 +20,13 @@ pub fn setup_lua(registry: TestRegistry) -> Result<Lua, Box<dyn std::error::Erro
     })?;
 
     let expect_fn = lua.create_function(move |_, value: LuaValue| Ok(Expect { value }))?;
+
+    let http_fn = lua.create_function(|_, ()| {
+        let http_client = HttpClient::new();
+        Ok(http_client)
+    })?;
+
+    globals.set("http", http_fn)?;
     globals.set("test", test_fn)?;
     globals.set("expect", expect_fn)?;
     Ok(lua)

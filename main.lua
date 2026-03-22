@@ -1,8 +1,12 @@
-test("hi", function() end)
-test("hello", function()
-  expect(1):to_equal(3)
+local client = http()
+client:base_url("https://crux.hs.vc")
+
+test("GET /", function()
+	local res = client:get("/")
+	expect(res.status):to_equal(200)
 end)
 
-test("pass", function()
-  expect(2):to_exist()
+test("GET /explore", function()
+	local res = client:get("/explore")
+	expect(res.status):to_equal(200)
 end)
