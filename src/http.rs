@@ -19,7 +19,7 @@ impl HttpClient {
 
 impl UserData for HttpClient {
     fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
-        methods.add_method_mut("base_url", |lua, this, url: String| {
+        methods.add_method_mut("base_url", |_, this, url: String| {
             this.base_url = Some(url);
             Ok(())
         });
@@ -40,22 +40,22 @@ impl UserData for HttpClient {
                 .await
                 .map_err(|e| mlua::Error::RuntimeError(e.to_string()))?;
 
-            // let json: Option<JsonValue> = serde_json::from_str(&text).ok();
+            let json: Option<JsonValue> = serde_json::from_str(&text).ok();
 
             let res_table = lua.create_table()?;
             res_table.set("status", status)?;
             res_table.set("body", text)?;
 
-            // if let Some(json_val) = json {
-            //     let lua_json = json_to_lua(&lua, json_val);
-            //     res_table.set("json", lua_json);
-            // }
+            if let Some(json_val) = json {
+                let lua_json = json_to_lua(&lua, json_val)?;
+                res_table.set("json", lua_json.clone())?;
+            }
             Ok(res_table)
         });
     }
 }
 
-fn json_to_lua(lua: &Lua, value: JsonValue) -> Result<mlua::Value, Box<dyn std::error::Error>> {
+fn json_to_lua(lua: &Lua, value: JsonValue) -> Result<mlua::Value, mlua::Error> {
     Ok(match value {
         JsonValue::Null => mlua::Value::Nil,
         JsonValue::Bool(b) => mlua::Value::Boolean(b),
