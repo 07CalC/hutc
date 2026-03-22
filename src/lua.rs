@@ -1,7 +1,7 @@
 use std::{fs, io::Error};
 
-use mlua::prelude::*;
 use mlua::Variadic;
+use mlua::prelude::*;
 
 use crate::{expect::Expect, http::client::HttpClient, registry::TestRegistry};
 
@@ -20,7 +20,12 @@ pub fn setup_lua(registry: TestRegistry) -> Result<Lua, Box<dyn std::error::Erro
         Ok(())
     })?;
 
-    let expect_fn = lua.create_function(move |_, value: LuaValue| Ok(Expect { value }))?;
+    let expect_fn = lua.create_function(move |_, value: LuaValue| {
+        Ok(Expect {
+            value,
+            error_message: None,
+        })
+    })?;
 
     let http_fn = lua.create_function(|_, ()| {
         let http_client = HttpClient::new();

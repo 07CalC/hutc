@@ -6,6 +6,7 @@ use crate::{
 };
 
 mod cli;
+mod env;
 mod expect;
 mod http;
 mod lua;
