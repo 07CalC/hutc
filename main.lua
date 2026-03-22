@@ -1,5 +1,5 @@
 local client = http()
-
+client:base_url("https://jsonplaceholder.typicode.com")
 -- test("GET /", function()
 -- 	local res = client:get("/")
 -- 	expect(res.status):to_equal(200)
@@ -11,6 +11,7 @@ local client = http()
 -- end)
 
 test("GET json data", function()
-	local res = client:get("https://jsonplaceholder.typicode.com/posts/5")
-	print(res.json.body)
+	local res = client:req():path("/posts/1"):get()
+	expect(res.status):to_equal(200)
+	expect(res.json.id):to_equal(1)
 end)

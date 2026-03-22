@@ -1,5 +1,8 @@
 use mlua::{Lua, UserData};
+use reqwest::Method;
 use serde_json::Value as JsonValue;
+
+use crate::http::req::RequestBuilder;
 
 pub struct HttpClient {
     pub base_url: Option<String>,
@@ -23,39 +26,42 @@ impl UserData for HttpClient {
             this.base_url = Some(url);
             Ok(())
         });
-        methods.add_async_method("get", |lua, this, path: String| async move {
-            let url = this.build_url(path);
-
-            let client = reqwest::Client::new();
-
-            let response = client
-                .get(&url)
-                .send()
-                .await
-                .map_err(|e| mlua::Error::RuntimeError(e.to_string()))?;
-
-            let status = response.status().as_u16();
-            let text = response
-                .text()
-                .await
-                .map_err(|e| mlua::Error::RuntimeError(e.to_string()))?;
-
-            let json: Option<JsonValue> = serde_json::from_str(&text).ok();
-
-            let res_table = lua.create_table()?;
-            res_table.set("status", status)?;
-            res_table.set("body", text)?;
-
-            if let Some(json_val) = json {
-                let lua_json = json_to_lua(&lua, json_val)?;
-                res_table.set("json", lua_json.clone())?;
-            }
-            Ok(res_table)
+        methods.add_method("req", |_, this, ()| {
+            Ok(RequestBuilder::new(this.base_url.clone()))
         });
+        // methods.add_async_method("get", |lua, this, path: String| async move {
+        //     let url = this.build_url(path);
+        //
+        //     let client = reqwest::Client::new();
+        //
+        //     let response = client
+        //         .get(&url)
+        //         .send()
+        //         .await
+        //         .map_err(|e| mlua::Error::RuntimeError(e.to_string()))?;
+        //
+        //     let status = response.status().as_u16();
+        //     let text = response
+        //         .text()
+        //         .await
+        //         .map_err(|e| mlua::Error::RuntimeError(e.to_string()))?;
+        //
+        //     let json: Option<JsonValue> = serde_json::from_str(&text).ok();
+        //
+        //     let res_table = lua.create_table()?;
+        //     res_table.set("status", status)?;
+        //     res_table.set("body", text)?;
+        //
+        //     if let Some(json_val) = json {
+        //         let lua_json = json_to_lua(&lua, json_val)?;
+        //         res_table.set("json", lua_json.clone())?;
+        //     }
+        //     Ok(res_table)
+        // });
     }
 }
 
-fn json_to_lua(lua: &Lua, value: JsonValue) -> Result<mlua::Value, mlua::Error> {
+pub fn json_to_lua(lua: &Lua, value: JsonValue) -> Result<mlua::Value, mlua::Error> {
     Ok(match value {
         JsonValue::Null => mlua::Value::Nil,
         JsonValue::Bool(b) => mlua::Value::Boolean(b),

@@ -2,7 +2,7 @@ use std::{fs, io::Error};
 
 use mlua::prelude::*;
 
-use crate::{expect::Expect, http::HttpClient, registry::TestRegistry};
+use crate::{expect::Expect, http::client::HttpClient, registry::TestRegistry};
 
 pub fn load_lua(path: &str) -> Result<String, Error> {
     let lua_content = fs::read_to_string(path)?;
