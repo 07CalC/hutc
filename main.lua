@@ -12,7 +12,7 @@ client:base_url("https://crux-pied.vercel.app")
 -- client:req():path("/posts/1"):bearer("token"):delete()
 -- client:req():path("/posts/1"):send() -- send with current/default method
 
-test("GET json data", function()
+test("GET /getOrcr id test", function()
 	local res = client
 		:req()
 		:path("/api/v1/getOrcr")
@@ -22,6 +22,11 @@ test("GET json data", function()
 		:header("sec-fetch-site", "something")
 		:header("accept-language", "something")
 		:post()
-	expect(res.json[1].id):msg("id not matching"):to_equal("14ca23b3-36c4-49f1-82a7-763aebkb1162")
-	log(res.json[1].id)
+	expect(res.json[1].id):msg("id not matching"):to_equal("14ca23b3-36c4-49f1-82a7-763aebeb1162")
+end)
+
+test("GET /explore status test", function()
+	local res = client:req():path("/explore"):get()
+
+	expect(res.status):to_equal(300)
 end)
