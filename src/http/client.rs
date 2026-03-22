@@ -1,5 +1,4 @@
 use mlua::{Lua, UserData};
-use reqwest::Method;
 use serde_json::Value as JsonValue;
 
 use crate::http::req::RequestBuilder;
@@ -11,12 +10,6 @@ pub struct HttpClient {
 impl HttpClient {
     pub fn new() -> Self {
         Self { base_url: None }
-    }
-    fn build_url(&self, path: String) -> String {
-        match &self.base_url {
-            Some(base) => format!("{}{}", base, path),
-            None => path,
-        }
     }
 }
 
