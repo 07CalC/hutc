@@ -1,6 +1,7 @@
 use std::{fs, io::Error};
 
 use mlua::prelude::*;
+use mlua::Variadic;
 
 use crate::{expect::Expect, http::client::HttpClient, registry::TestRegistry};
 
@@ -26,9 +27,21 @@ pub fn setup_lua(registry: TestRegistry) -> Result<Lua, Box<dyn std::error::Erro
         Ok(http_client)
     })?;
 
+    let log_fn = lua.create_function(|_, values: Variadic<LuaValue>| {
+        let line = values
+            .into_iter()
+            .map(|value| format!("{value:#?}"))
+            .collect::<Vec<_>>()
+            .join("\t");
+        println!("{line}");
+        Ok(())
+    })?;
+
     globals.set("http", http_fn)?;
     globals.set("test", test_fn)?;
     globals.set("expect", expect_fn)?;
+    globals.set("log", log_fn)?;
+
     Ok(lua)
 }
 
