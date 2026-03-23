@@ -2,13 +2,15 @@ use futures::future::join_all;
 use std::time::Instant;
 
 use crate::{
-    lua::{extract_lua_error, load_lua, setup_lua},
+    fs::load_lua,
+    lua::{extract_lua_error, setup_lua},
     registry::TestRegistry,
 };
 
 mod cli;
 mod env;
 mod expect;
+mod fs;
 mod http;
 mod lua;
 mod registry;
@@ -18,8 +20,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let suite_start = Instant::now();
     let registry = TestRegistry::new();
     let lua = setup_lua(registry.clone())?;
-    let lua_content = load_lua("main.lua")?;
-    lua.load(lua_content).exec_async().await?;
+    let lua_files = load_lua("tests/")?;
+    for lua_content in lua_files {
+        lua.load(lua_content).exec_async().await?;
+    }
     let loaded_tests = registry.get_tests();
     let total = loaded_tests.len();
 

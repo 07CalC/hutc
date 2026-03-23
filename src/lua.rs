@@ -5,11 +5,6 @@ use mlua::prelude::*;
 
 use crate::{expect::Expect, http::client::HttpClient, registry::TestRegistry};
 
-pub fn load_lua(path: &str) -> Result<String, Error> {
-    let lua_content = fs::read_to_string(path)?;
-    Ok(lua_content)
-}
-
 pub fn setup_lua(registry: TestRegistry) -> Result<Lua, Box<dyn std::error::Error>> {
     let lua = Lua::new();
 
