@@ -27,10 +27,7 @@ impl UserData for Expect {
             if this.value == expected {
                 Ok(())
             } else {
-                Err(this.assertion_error(format!(
-                    "expected {:?} got {:?}",
-                    expected, this.value
-                )))
+                Err(this.assertion_error(format!("expected {:?} got {:?}", expected, this.value)))
             }
         });
         methods.add_method("to_not_equal", |_, this, expected: Value| {

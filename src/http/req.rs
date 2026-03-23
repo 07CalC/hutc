@@ -166,7 +166,8 @@ impl UserData for RequestBuilder {
             let header_value = HeaderValue::from_str(&auth_value).map_err(|e| {
                 mlua::Error::RuntimeError(format!("invalid bearer token header value: {e}"))
             })?;
-            this.headers.insert(HeaderName::from_static("authorization"), header_value);
+            this.headers
+                .insert(HeaderName::from_static("authorization"), header_value);
             Ok(this.clone())
         });
 
@@ -190,16 +191,18 @@ impl UserData for RequestBuilder {
             this.method = Method::DELETE;
             this.execute(&lua).await
         });
-        methods.add_async_method("send", |lua, this, ()| async move { this.execute(&lua).await });
+        methods.add_async_method(
+            "send",
+            |lua, this, ()| async move { this.execute(&lua).await },
+        );
     }
 }
 
 fn parse_header(key: &str, value: &str) -> Result<(HeaderName, HeaderValue)> {
     let header_name = HeaderName::from_str(key)
         .map_err(|e| mlua::Error::RuntimeError(format!("invalid header name `{key}`: {e}")))?;
-    let header_value = HeaderValue::from_str(value).map_err(|e| {
-        mlua::Error::RuntimeError(format!("invalid header value for `{key}`: {e}"))
-    })?;
+    let header_value = HeaderValue::from_str(value)
+        .map_err(|e| mlua::Error::RuntimeError(format!("invalid header value for `{key}`: {e}")))?;
     Ok((header_name, header_value))
 }
 
