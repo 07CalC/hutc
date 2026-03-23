@@ -2,6 +2,14 @@
 
 Lua-driven HTTP API test runner built in Rust.
 
+## Installation
+
+Install from crates.io:
+
+```bash
+cargo install hutc
+```
+
 ## Project Structure
 
 ```text
@@ -27,7 +35,15 @@ Lua-driven HTTP API test runner built in Rust.
 ## Typical Setup
 
 1. Generate definitions for Lua language server:
-   - `cargo run -- init`
+   - `hutc init`
 2. Write tests in `tests`.
 3. Run tests:
-   - `cargo run -- test`
+   - `hutc test`
+
+## Development
+
+Run from source without installing:
+
+```bash
+cargo run -- test
+```
