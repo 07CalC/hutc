@@ -16,7 +16,7 @@ pub enum Command {
         path: String,
     },
     Init {
-        #[arg(default_value = "tests")]
+        #[arg(default_value = "defs")]
         path: String,
     },
 }

@@ -9,7 +9,6 @@ pub struct Expect {
 impl Expect {
     fn assertion_error(&self, detail: String) -> mlua::Error {
         if let Some(msg) = &self.error_message {
-            println!("{msg}");
             mlua::Error::RuntimeError(format!("{msg}: {detail}"))
         } else {
             mlua::Error::RuntimeError(detail)

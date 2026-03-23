@@ -2,6 +2,14 @@
 name = "hutc"
 version = "0.1.0"
 edition = "2024"
+authors = ["Calc hello@vinm.me"]
+description = "Simple af rest api testing client using lua"
+readme = "README.md"
+license = "MIT"
+repository = "https://github.com/07calc/hutc"
+keywords = ["dev", "rest-api", "testing"]
+categories = ["development-tools", "api-testing", "testing"]
+exclude = ["/target/*", "*.rs.bk", "*.log", "examples/*"]
 
 [dependencies]
 anyhow = "1.0.102"

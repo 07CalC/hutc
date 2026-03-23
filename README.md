@@ -18,8 +18,7 @@ cargo install hutc
 │   └── lua/
 │       └── hutc.defs.lua      # LuaLS definition template used by `hutc init`
 ├── examples/
-│   └── lua/
-│       └── http_examples.lua  # usage examples
+│   └── http_examples.lua      # usage examples
 ├── src/                       # Rust source code
 ├── Cargo.toml
 └── README.md
@@ -36,7 +35,7 @@ cargo install hutc
 
 1. Generate definitions for Lua language server:
    - `hutc init`
-2. Write tests in `tests`.
+2. Write tests in `lua/tests`.
 3. Run tests:
    - `hutc test`
 

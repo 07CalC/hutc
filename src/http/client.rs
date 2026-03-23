@@ -1,4 +1,5 @@
 use mlua::{Lua, UserData};
+use reqwest::Url;
 use serde_json::Value as JsonValue;
 
 use crate::http::req::RequestBuilder;
@@ -16,7 +17,26 @@ impl HttpClient {
 impl UserData for HttpClient {
     fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
         methods.add_method_mut("base_url", |_, this, url: String| {
-            this.base_url = Some(url);
+            let parsed = Url::parse(&url).map_err(|e| {
+                mlua::Error::RuntimeError(format!(
+                    "invalid base_url `{url}`: {e}. expected absolute URL like `https://api.example.com`"
+                ))
+            })?;
+
+            let scheme = parsed.scheme();
+            if scheme != "http" && scheme != "https" {
+                return Err(mlua::Error::RuntimeError(format!(
+                    "invalid base_url `{url}`: unsupported scheme `{scheme}`. only `http` and `https` are allowed"
+                )));
+            }
+
+            if parsed.host_str().is_none() {
+                return Err(mlua::Error::RuntimeError(format!(
+                    "invalid base_url `{url}`: host is missing"
+                )));
+            }
+
+            this.base_url = Some(parsed.to_string());
             Ok(())
         });
         methods.add_method("req", |_, this, ()| {

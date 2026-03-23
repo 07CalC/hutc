@@ -21,10 +21,20 @@ impl TestRegistry {
     }
 
     pub fn add_test(&self, name: String, func: Function) {
-        self.tests.lock().unwrap().push(Test { name, func });
+        let mut guard = self.tests.lock().unwrap_or_else(|poisoned| {
+            eprintln!(
+                "warning: test registry lock was poisoned; recovering to preserve collected tests"
+            );
+            poisoned.into_inner()
+        });
+        guard.push(Test { name, func });
     }
 
     pub fn get_tests(&self) -> Vec<Test> {
-        self.tests.lock().unwrap().clone()
+        let guard = self.tests.lock().unwrap_or_else(|poisoned| {
+            eprintln!("warning: test registry lock was poisoned; using recovered test list");
+            poisoned.into_inner()
+        });
+        guard.clone()
     }
 }
