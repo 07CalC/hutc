@@ -11,6 +11,7 @@ use crate::{
     init::init,
     lua::{extract_lua_error, setup_lua},
     registry::TestRegistry,
+    update::update_available_message,
 };
 
 mod cli;
@@ -20,6 +21,7 @@ mod http;
 mod init;
 mod lua;
 mod registry;
+mod update;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -118,11 +120,17 @@ async fn run_tests(path: &str) -> Result<(), Box<dyn std::error::Error>> {
         "summary: total={} passed={} failed={} duration={} ms",
         total, passed, failed, suite_duration_ms
     );
+    let had_failures = !failed_tests.is_empty();
     if !failed_tests.is_empty() {
         println!("failed tests:");
         for name in failed_tests {
             println!("  - {name}");
         }
+    }
+    if let Some(message) = update_available_message().await {
+        println!("{message}");
+    }
+    if had_failures {
         return Err(Error::other(format!("{failed}/{total} test(s) failed")).into());
     }
 

@@ -28,14 +28,14 @@ cargo install hutc
 
 - `hutc test` runs all `.lua` tests under `tests`.
 - `hutc test <path>` runs tests from a custom file or directory.
-- `hutc init` generates `tests/hutc.defs.lua`.
+- `hutc init` generates `defs/hutc.defs.lua`.
 - `hutc init <path>` generates `hutc.defs.lua` in a custom directory.
 
 ## Typical Setup
 
 1. Generate definitions for Lua language server:
    - `hutc init`
-2. Write tests in `lua/tests`.
+2. Write tests in `tests`.
 3. Run tests:
    - `hutc test`
 
