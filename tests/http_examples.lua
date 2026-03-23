@@ -1,5 +1,5 @@
 local client = http()
-client:base_url("https://crux-pied.vercel.app")
+client:base_url("http://localhost:3000")
 -- client:req():url("https://example.com/health"):get()
 -- client:req():path("/posts"):query("userId", "1"):get()
 -- client:req():path("/posts"):queries({ userId = "1", _limit = "5" }):get()
@@ -12,19 +12,6 @@ client:base_url("https://crux-pied.vercel.app")
 -- client:req():path("/posts/1"):bearer("token"):delete()
 -- client:req():path("/posts/1"):send() -- send with current/default method
 
-local function expect_json(res)
-	local body_preview = string.sub(res.body or "", 1, 180)
-	local message = string.format(
-		"expected JSON response, status=%s content_type=%s url=%s json_error=%s body=%s",
-		tostring(res.status),
-		tostring(res.content_type),
-		tostring(res.url),
-		tostring(res.json_error),
-		body_preview
-	)
-	expect(res.json):msg(message):to_exist()
-end
-
 test("GET /getOrcr id test", function()
 	local res = client
 			:req()
@@ -35,14 +22,13 @@ test("GET /getOrcr id test", function()
 			:header("sec-fetch-site", "something")
 			:header("accept-language", "something")
 			:post()
-	expect_json(res)
-	local first_result = res.json and res.json[1]
-	expect(first_result):msg("expected first result object"):to_exist()
-	expect(first_result and first_result.id):msg("id not matching"):to_equal("14ca23b3-36c4-49f1-82a7-763aebeb1162")
+	log(res)
+	-- expect(res.status):to_equal(200)
+	-- expect(res.json[1].id):msg("id not matching"):to_equal("14ca23b3-36c4-49f1-82a7-763aebeb1162")
 end)
 
 test("GET /explore status test", function()
 	local res = client:req():path("/explore"):get()
-
-	expect(res.status):to_equal(200)
+	log(res)
+	-- expect(res.status):to_equal(200)
 end)

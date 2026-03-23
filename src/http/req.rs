@@ -111,6 +111,10 @@ if you use `:path(...)`, set `client:base_url(...)` first"
         let response_url = res.url().to_string();
         let response_headers = res.headers().clone();
         let status = res.status().as_u16();
+        let content_type = response_headers
+            .get(reqwest::header::CONTENT_TYPE)
+            .and_then(|v| v.to_str().ok())
+            .map(str::to_string);
         let text = res.text().await.map_err(|e| {
             mlua::Error::RuntimeError(format!(
                 "failed to read response body for {method} `{url}`: {}",
@@ -119,7 +123,7 @@ if you use `:path(...)`, set `client:base_url(...)` first"
         })?;
         let duration_ms = i64::try_from(start.elapsed().as_millis()).unwrap_or(i64::MAX);
 
-        let json: Option<JsonValue> = serde_json::from_str(&text).ok();
+        let parsed_json = serde_json::from_str::<JsonValue>(&text);
 
         let table = lua.create_table()?;
         table.set("status", status)?;
@@ -128,9 +132,25 @@ if you use `:path(...)`, set `client:base_url(...)` first"
         table.set("url", response_url)?;
         table.set("duration_ms", duration_ms)?;
         table.set("headers", headers_to_lua(lua, &response_headers)?)?;
-        if let Some(json) = json {
-            let lua_json = json_to_lua(lua, json)?;
-            table.set("json", lua_json)?;
+        if let Some(content_type) = &content_type {
+            table.set("content_type", content_type.as_str())?;
+        }
+        match parsed_json {
+            Ok(json) => {
+                let lua_json = json_to_lua(lua, json)?;
+                table.set("json", lua_json)?;
+            }
+            Err(parse_err) if !text.trim().is_empty() => {
+                let content_type = content_type.unwrap_or_else(|| "<unknown>".to_string());
+                table.set(
+                    "json_error",
+                    format!(
+                        "failed to parse response as JSON (content_type=`{content_type}`): {parse_err}. body preview: `{}`",
+                        preview(&text, 180)
+                    ),
+                )?;
+            }
+            Err(_) => {}
         }
         Ok(table)
     }

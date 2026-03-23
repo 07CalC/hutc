@@ -23,12 +23,8 @@
 ---@field duration_ms integer
 ---Response headers by header name.
 ---@field headers StringMap
----Response `content-type` header when present.
----@field content_type? string
 ---Parsed JSON when body is valid JSON.
 ---@field json? any
----Reason JSON parsing failed when `json` is absent.
----@field json_error? string
 
 ---HTTP client used to set defaults and create request builders.
 ---@class HttpClient

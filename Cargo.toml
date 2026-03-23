@@ -1,6 +1,6 @@
 [package]
 name = "hutc"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 authors = ["Calc hello@vinm.me"]
 description = "Simple af rest api testing client using lua"
