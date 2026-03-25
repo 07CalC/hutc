@@ -67,6 +67,10 @@ impl UserData for Expect {
             Value::Nil => Err(this.assertion_error("expected value to exist but got nil".into())),
             _ => Ok(()),
         });
+        methods.add_method("to_be_nil", |_, this, _: ()| match this.value {
+            Value::Nil => Ok(()),
+            _ => Err(this.assertion_error("expected value to exist but got nil".into())),
+        });
         methods.add_method("to_contain", |_, this, matcher: String| {
             this.value
                 .to_string()
