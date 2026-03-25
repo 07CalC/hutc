@@ -20,19 +20,18 @@ cargo install hutc
 hutc init
 ```
 
-This creates `tests/hutc.defs.lua`.
+This creates `defs/hutc.defs.lua`.
 
 2. Create a test file at `tests/health.lua`:
 
 ```lua
-local client = http()
-client:base_url("https://example.com")
+local client = http():base_url("https://example.com")
 
 test("health endpoint is up", function()
   local res = client:req():path("/health"):get()
 
   expect(res.status):to_equal(200)
-  expect(res.ok):to_equal(true)
+  expect(res.ok):to_be_true()
 end)
 ```
 
@@ -44,8 +43,8 @@ hutc test
 
 ## Default Paths
 
-- `hutc test` reads `.lua` files from `tests`
-- `hutc init` writes `tests/hutc.defs.lua`
+- `hutc test` reads `.lua` files from `tests/`
+- `hutc init` writes to `defs/hutc.defs.lua`
 
 ## Lua API
 
@@ -64,16 +63,26 @@ hutc test
 
 | Method | Description |
 |---|---|
-| `:msg("message")` | Adds custom message prefix on assertion failure |
+| `:msg("message")` | Adds custom message prefix on failure |
 | `:to_equal(expected)` | Asserts equality |
 | `:to_not_equal(expected)` | Asserts inequality |
 | `:to_exist()` | Asserts value is not `nil` |
+| `:to_be_nil()` | Asserts value is `nil` |
+| `:to_be_true()` | Asserts value is `true` |
+| `:to_be_false()` | Asserts value is `false` |
+| `:to_be_type(type)` | Asserts value has expected type |
+| `:to_contain(substring)` | Asserts string contains substring |
+| `:to_be_greater_than(n)` | Asserts value > n |
+| `:to_be_lesser_than(n)` | Asserts value < n |
+| `:to_be_between(min, max)` | Asserts min <= value <= max |
 
 Example:
 
 ```lua
 expect(res.status):msg("status mismatch"):to_equal(200)
 expect(res.json.user):to_exist()
+expect(res.ok):to_be_true()
+expect(res.body):to_contain("success")
 ```
 
 ### HTTP Client
@@ -81,8 +90,7 @@ expect(res.json.user):to_exist()
 Create a client:
 
 ```lua
-local client = http()
-client:base_url("https://api.example.com")
+local client = http():base_url("https://api.example.com")
 ```
 
 Create a request with `client:req()`, then chain request-builder methods:
@@ -104,11 +112,16 @@ Create a request with `client:req()`, then chain request-builder methods:
 
 Execute with one of:
 
-`get`, `post`, `put`, `patch`, `delete`, `send`
+| Method | Description |
+|---|---|
+| `:get()` | Execute as GET request |
+| `:post()` | Execute as POST request |
+| `:put()` | Execute as PUT request |
+| `:patch()` | Execute as PATCH request |
+| `:delete()` | Execute as DELETE request |
+| `:send()` | Execute with default method (GET) |
 
-`send` uses current/default method (`GET` unless set by another verb).
-
-### HTTP Response Shape
+### HTTP Response
 
 Each request returns a response table:
 
@@ -120,13 +133,14 @@ Each request returns a response table:
 | `url` | `string` | Final response URL |
 | `duration_ms` | `integer` | Request duration |
 | `headers` | `table<string, string>` | Response headers |
+| `content_type` | `string?` | Response content-type header |
 | `json` | `any?` | Parsed JSON (if body is valid JSON) |
+| `json_error` | `string?` | JSON parse error (if parsing failed) |
 
-## End-to-End Example
+## Example
 
 ```lua
-local client = http()
-client:base_url("https://jsonplaceholder.typicode.com")
+local client = http():base_url("https://jsonplaceholder.typicode.com")
 
 test("GET /posts returns data", function()
   local res = client
@@ -144,7 +158,6 @@ test("POST /posts creates resource", function()
   local res = client
     :req()
     :path("/posts")
-    :header("content-type", "application/json")
     :json('{"title":"hello","body":"world","userId":1}')
     :post()
 
