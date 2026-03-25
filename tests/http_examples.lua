@@ -23,6 +23,7 @@ test("GET /getOrcr id test", function()
 			:header("accept-language", "something")
 			:post()
 	expect(res.status):to_equal(200)
+	expect(res.status):to_be_type("integer")
 	expect(res.json[1].id):msg("id not matching"):to_contain("14ca23b348")
 end)
 

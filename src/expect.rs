@@ -87,5 +87,13 @@ impl UserData for Expect {
             Value::Boolean(false) => Ok(()),
             _ => Err(this.assertion_error("expected false".into())),
         });
+        methods.add_method("to_be_type", |_, this, expected: String| {
+            let actual = this.value.type_name();
+            if actual == expected {
+                Ok(())
+            } else {
+                Err(this.assertion_error(format!("expected type {} but got {}", expected, actual)))
+            }
+        });
     }
 }
