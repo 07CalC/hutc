@@ -9,6 +9,16 @@
 ---Simple key-value map used for headers, query params, and form values.
 ---@alias StringMap table<string, string>
 
+---@alias LuaType
+---| "nil"
+---| "string"
+---| "number"
+---| "boolean"
+---| "table"
+---| "function"
+---| "userdata"
+---| "thread"
+
 ---HTTP response returned by request execution methods.
 ---@class HttpResponse
 ---Numeric HTTP status code.
@@ -155,6 +165,23 @@ function Expect:to_not_equal(expected) end
 ---Assert that value is not `nil`.
 ---@return nil
 function Expect:to_exist() end
+
+---Assert that value is `nil`.
+---@return nil
+function Expect:to_be_nil() end
+
+---Assert that value is true
+---@return nil
+function Expect:to_be_true() end
+
+---Assert that value is false
+---@return nil
+function Expect:to_be_false() end
+
+---Assert that the value has type expected
+---@param expected LuaType
+---@return nil
+function Expect:to_be_type(expected) end
 
 ---Register a test case.
 ---@param name string
