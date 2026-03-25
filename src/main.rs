@@ -1,5 +1,4 @@
 use clap::Parser;
-use futures::future::join_all;
 use std::{
     io::{Error, ErrorKind},
     time::Instant,
@@ -69,20 +68,15 @@ async fn run_tests(path: &str) -> Result<(), Box<dyn std::error::Error>> {
 
     println!("running {total} test{}", if total == 1 { "" } else { "s" });
 
-    let results = join_all(loaded_tests.into_iter().map(|test| async move {
-        let started_at = Instant::now();
-        let name = test.name;
-        let result = test.func.call_async::<()>(()).await;
-        let duration_ms = started_at.elapsed().as_millis();
-        (name, result, duration_ms)
-    }))
-    .await;
-
     let mut passed = 0usize;
     let mut failed = 0usize;
     let mut failed_tests = Vec::new();
 
-    for (index, (name, result, duration_ms)) in results.into_iter().enumerate() {
+    for (index, test) in loaded_tests.into_iter().enumerate() {
+        let started_at = Instant::now();
+        let name = test.name;
+        let result = test.func.call_async::<()>(()).await;
+        let duration_ms = started_at.elapsed().as_millis();
         match result {
             Ok(_) => {
                 passed += 1;
@@ -99,17 +93,13 @@ async fn run_tests(path: &str) -> Result<(), Box<dyn std::error::Error>> {
                 failed_tests.push(name.clone());
                 let err = extract_lua_error(e);
                 println!(
-                    "[{}/{}] FAIL {} ({} ms)",
+                    "[{}/{}] FAIL {} ({} ms)\n       {}",
                     index + 1,
                     total,
                     name,
-                    duration_ms
+                    duration_ms,
+                    err
                 );
-                println!("  error:");
-                for line in err.lines() {
-                    println!("    {line}");
-                }
-                println!("  end error");
             }
         }
     }

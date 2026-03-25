@@ -94,5 +94,11 @@ fn collect_lua_files(path: &Path, out: &mut Vec<PathBuf>) -> Result<(), Error> {
 }
 
 fn is_lua_file(path: &Path) -> bool {
-    path.extension().and_then(|s| s.to_str()) == Some("lua")
+    let is_lua = path.extension().and_then(|s| s.to_str()) == Some("lua");
+    if !is_lua {
+        return false;
+    }
+    //skip defination files this time, bcz i am an idiot
+    let file_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+    !file_name.ends_with(".defs.lua")
 }

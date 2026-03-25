@@ -1,5 +1,5 @@
-use mlua::Variadic;
 use mlua::prelude::*;
+use mlua::Variadic;
 
 use crate::{expect::Expect, http::client::HttpClient, registry::TestRegistry};
 
@@ -49,44 +49,97 @@ pub fn setup_lua(registry: TestRegistry) -> Result<Lua, Box<dyn std::error::Erro
 }
 
 pub fn extract_lua_error(err: mlua::Error) -> String {
-    let mut lines = Vec::new();
-    collect_error_lines(&err, &mut lines, 0);
-    if lines.is_empty() {
-        "<unknown Lua error>".to_string()
-    } else {
-        lines.join("\n")
+    let (message, location) = extract_error_parts(&err);
+    match location {
+        Some(loc) => format!("{loc}: {message}"),
+        None => message,
     }
 }
 
-fn collect_error_lines(err: &mlua::Error, lines: &mut Vec<String>, depth: usize) {
-    let indent = "  ".repeat(depth);
+fn extract_error_parts(err: &mlua::Error) -> (String, Option<String>) {
     match err {
         mlua::Error::CallbackError { traceback, cause } => {
-            lines.push(format!("{indent}lua callback error"));
-
-            let traceback = traceback.trim();
-            if !traceback.is_empty() {
-                lines.push(format!("{indent}traceback:"));
-                for line in traceback.lines() {
-                    let line = line.trim_end();
-                    if !line.is_empty() && !line.contains("src/main.rs:") {
-                        lines.push(format!("{indent}  {line}"));
-                    }
-                }
-            }
-
-            lines.push(format!("{indent}cause:"));
-            collect_error_lines(cause.as_ref(), lines, depth + 1);
+            let (message, _) = extract_error_parts(cause.as_ref());
+            let location = extract_user_location(traceback);
+            (message, location)
         }
-        other => {
-            let message = other.to_string();
-            if message.trim().is_empty() {
-                lines.push(format!("{indent}<empty error>"));
+        mlua::Error::RuntimeError(msg) => {
+            // Runtime errors often include location in the message like:
+            // "[string \"file.lua\"]:10: actual error message"
+            if let Some((loc, msg)) = parse_lua_error_message(msg) {
+                (msg, Some(loc))
             } else {
-                for line in message.lines() {
-                    lines.push(format!("{indent}{line}"));
-                }
+                (msg.clone(), None)
             }
         }
+        other => (other.to_string(), None),
+    }
+}
+
+/// Extract the first user-code location from a Lua traceback
+fn extract_user_location(traceback: &str) -> Option<String> {
+    for line in traceback.lines() {
+        let line = line.trim();
+        // Skip internal frames
+        if line.is_empty()
+            || line.starts_with("stack traceback:")
+            || line.contains("[C]:")
+            || line.contains("[string \"?\"]")
+            || line.contains("src/main.rs")
+        {
+            continue;
+        }
+        // Extract location from lines like:
+        // [string "tests/file.lua"]:10: in function <...>
+        if let Some(loc) = parse_traceback_location(line) {
+            return Some(loc);
+        }
+    }
+    None
+}
+
+/// Parse location from a traceback line like:
+/// `[string "tests/file.lua"]:10: in function <...>`
+/// Returns: `tests/file.lua:10`
+fn parse_traceback_location(line: &str) -> Option<String> {
+    let line = line.trim_start_matches("[string \"");
+    let end_quote = line.find("\"]:")?;
+    let file = &line[..end_quote];
+    let rest = &line[end_quote + 3..];
+    let line_end = rest.find(':').unwrap_or(rest.len());
+    let line_num = rest[..line_end].trim();
+    if line_num.chars().all(|c| c.is_ascii_digit()) {
+        Some(format!("{file}:{line_num}"))
+    } else {
+        Some(file.to_string())
+    }
+}
+
+/// Parse Lua error messages that include location like:
+/// `[string "file.lua"]:10: attempt to index nil`
+/// Returns: (location, message)
+fn parse_lua_error_message(msg: &str) -> Option<(String, String)> {
+    if !msg.starts_with("[string \"") {
+        return None;
+    }
+    let after_prefix = &msg[9..]; // skip `[string "`
+    let end_quote = after_prefix.find("\"]:")?;
+    let file = &after_prefix[..end_quote];
+    let rest = &after_prefix[end_quote + 3..]; // skip `"]:`
+
+    // Find line number and message
+    let colon = rest.find(':')?;
+    let line_num = rest[..colon].trim();
+    let mut message = rest[colon + 1..].trim();
+
+    // Strip stack traceback if present
+    if let Some(traceback_start) = message.find("\nstack traceback:") {
+        message = message[..traceback_start].trim();
+    }
+
+    if line_num.chars().all(|c| c.is_ascii_digit()) {
+        Some((format!("{file}:{line_num}"), message.to_string()))
+    } else {
+        None
     }
 }

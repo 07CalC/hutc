@@ -89,7 +89,12 @@ if you use `:path(...)`, set `client:base_url(...)` first"
     }
 
     pub async fn execute(&self, lua: &Lua) -> Result<Table> {
-        let client = Client::new();
+        let client = Client::builder()
+            .gzip(true)
+            .brotli(true)
+            .deflate(true)
+            .build()
+            .map_err(|e| mlua::Error::RuntimeError(format!("failed to create HTTP client: {e}")))?;
         let start = std::time::Instant::now();
         let method = self.method.as_str().to_string();
 
@@ -101,13 +106,13 @@ if you use `:path(...)`, set `client:base_url(...)` first"
         if let Some(timeout) = self.timeout {
             req = req.timeout(timeout);
         }
-
         let res = req.send().await.map_err(|e| {
             mlua::Error::RuntimeError(format!(
                 "failed to send {method} request to `{url}`: {}",
                 describe_reqwest_error(&e)
             ))
         })?;
+
         let response_url = res.url().to_string();
         let response_headers = res.headers().clone();
         let status = res.status().as_u16();
