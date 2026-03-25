@@ -9,16 +9,6 @@
 ---Simple key-value map used for headers, query params, and form values.
 ---@alias StringMap table<string, string>
 
----@alias LuaType
----| "nil"
----| "string"
----| "number"
----| "boolean"
----| "table"
----| "function"
----| "userdata"
----| "thread"
-
 ---HTTP response returned by request execution methods.
 ---@class HttpResponse
 ---Numeric HTTP status code.
@@ -46,7 +36,7 @@ HttpClient = {}
 
 ---Set a base URL used by `RequestBuilder:path(...)`.
 ---@param url string
----@return nil
+---@return HttpClient
 function HttpClient:base_url(url) end
 
 ---Create a new request builder bound to this client.
@@ -170,18 +160,39 @@ function Expect:to_exist() end
 ---@return nil
 function Expect:to_be_nil() end
 
----Assert that value is true
+---Assert that value is true.
 ---@return nil
 function Expect:to_be_true() end
 
----Assert that value is false
+---Assert that value is false.
 ---@return nil
 function Expect:to_be_false() end
 
----Assert that the value has type expected
----@param expected LuaType
+---Assert that the value has the expected type.
+---@param expected string
 ---@return nil
 function Expect:to_be_type(expected) end
+
+---Assert that the value is greater than expected.
+---@param expected number
+---@return nil
+function Expect:to_be_greater_than(expected) end
+
+---Assert that the value is lesser than expected.
+---@param expected number
+---@return nil
+function Expect:to_be_lesser_than(expected) end
+
+---Assert that the value is between min and max (inclusive).
+---@param min number
+---@param max number
+---@return nil
+function Expect:to_be_between(min, max) end
+
+---Assert that the string value contains the given substring.
+---@param substring string
+---@return nil
+function Expect:to_contain(substring) end
 
 ---Register a test case.
 ---@param name string

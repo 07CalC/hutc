@@ -95,5 +95,24 @@ impl UserData for Expect {
                 Err(this.assertion_error(format!("expected type {} but got {}", expected, actual)))
             }
         });
+        methods.add_method("to_be_lesser_than", |_, this, other: f64| {
+            match this.value {
+                Value::Number(n) if n < other => Ok(()),
+                _ => Err(this.assertion_error(format!("expected < {}", other))),
+            }
+        });
+        methods.add_method("to_be_greater_than", |_, this, other: f64| {
+            match this.value {
+                Value::Number(n) if n > other => Ok(()),
+                _ => Err(this.assertion_error(format!("expected > {}", other))),
+            }
+        });
+        methods.add_method(
+            "to_be_between",
+            |_, this, (min, max): (f64, f64)| match this.value {
+                Value::Number(n) if n >= min && n <= max => Ok(()),
+                _ => Err(this.assertion_error(format!("expected between {} and {}", min, max))),
+            },
+        );
     }
 }
