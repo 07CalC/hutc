@@ -16,7 +16,6 @@ impl Expect {
     }
 }
 
-/// Format a Lua value for display in error messages
 fn format_value(value: &Value) -> String {
     match value {
         Value::Nil => "nil".to_string(),

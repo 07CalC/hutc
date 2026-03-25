@@ -28,5 +28,5 @@ end)
 
 test("GET /explore status test", function()
 	local res = client:req():path("/explore"):get()
-	expect(res.status):to_equal(200)
+	expect(res.status):to_equal(300)
 end)
