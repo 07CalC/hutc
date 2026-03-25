@@ -75,5 +75,13 @@ impl UserData for Expect {
                 .map(|_| ())
                 .ok_or_else(|| this.assertion_error(format!("expected to contain {}", matcher)))
         });
+        methods.add_method("to_be_true", |_, this, _: ()| match this.value {
+            Value::Boolean(true) => Ok(()),
+            _ => Err(this.assertion_error("expected true".into())),
+        });
+        methods.add_method("to_be_false", |_, this, _: ()| match this.value {
+            Value::Boolean(false) => Ok(()),
+            _ => Err(this.assertion_error("expected false".into())),
+        });
     }
 }
