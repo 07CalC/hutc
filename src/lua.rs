@@ -1,5 +1,8 @@
-use mlua::prelude::*;
+use std::time::Duration;
+
 use mlua::Variadic;
+use mlua::prelude::*;
+use tokio::time::sleep;
 
 use crate::{expect::Expect, http::client::HttpClient, registry::TestRegistry};
 
@@ -40,10 +43,16 @@ pub fn setup_lua(registry: TestRegistry) -> Result<Lua, Box<dyn std::error::Erro
         Ok(())
     })?;
 
+    let sleep_fn = lua.create_async_function(|_, time: u64| async move {
+        sleep(Duration::new(time, 0)).await;
+        Ok(())
+    })?;
+
     globals.set("http", http_fn)?;
     globals.set("test", test_fn)?;
     globals.set("expect", expect_fn)?;
     globals.set("log", log_fn)?;
+    globals.set("sleep", sleep_fn)?;
 
     Ok(lua)
 }

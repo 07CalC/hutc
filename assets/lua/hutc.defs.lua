@@ -213,3 +213,8 @@ function http() end
 ---@param ... any
 ---@return nil
 function log(...) end
+
+---Sleep function
+---@param duration integer
+---@return nil
+function sleep(duration) end
