@@ -8,7 +8,7 @@ pub async fn update_available_message() -> Option<String> {
     let latest = fetch_latest_version().await?;
     if is_newer_version(&latest, CURRENT_VERSION) {
         Some(format!(
-            "update available ({CURRENT_VERSION} -> {latest}), run `{UPDATE_CMD}` to update"
+            "\nupdate available ({CURRENT_VERSION} -> {latest}), run `{UPDATE_CMD}` to update\n"
         ))
     } else {
         None

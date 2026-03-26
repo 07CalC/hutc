@@ -27,10 +27,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
     match cli.command {
-        Command::Init { path } => init(path)?,
-        Command::Test { path } => run_tests(&path).await?,
+        Command::Init { path } => {
+            if let Err(e) = init(path) {
+                println!("Error: {:?}", e.to_string());
+            }
+        }
+        Command::Test { path } => {
+            if let Err(e) = run_tests(&path).await {
+                println!("Error: {:?}", e.to_string());
+            }
+        }
     }
-
+    if let Some(message) = update_available_message().await {
+        println!("{message}");
+    }
     Ok(())
 }
 
@@ -116,9 +126,6 @@ async fn run_tests(path: &str) -> Result<(), Box<dyn std::error::Error>> {
         for name in failed_tests {
             println!("  - {name}");
         }
-    }
-    if let Some(message) = update_available_message().await {
-        println!("{message}");
     }
     if had_failures {
         return Err(Error::other(format!("{failed}/{total} test(s) failed")).into());
