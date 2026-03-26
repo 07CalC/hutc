@@ -12,6 +12,8 @@ client:base_url("http://localhost:3000")
 -- client:req():path("/posts/1"):bearer("token"):delete()
 -- client:req():path("/posts/1"):send() -- send with current/default method
 
+local env = env()
+
 test("GET /getOrcr id test", function()
 	local res = client
 			:req()

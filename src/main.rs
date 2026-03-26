@@ -14,6 +14,7 @@ use crate::{
 };
 
 mod cli;
+mod env;
 mod expect;
 mod fs;
 mod http;

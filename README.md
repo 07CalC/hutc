@@ -55,6 +55,7 @@ hutc test
 | `test(name, fn)` | Registers a test case |
 | `expect(value)` | Creates an assertion object |
 | `http()` | Creates an HTTP client |
+| `env(path?)` | Loads a `.env` file and reads environment variables |
 | `log(...)` | Prints debug values |
 
 ### Assertions
@@ -136,6 +137,31 @@ Each request returns a response table:
 | `content_type` | `string?` | Response content-type header |
 | `json` | `any?` | Parsed JSON (if body is valid JSON) |
 | `json_error` | `string?` | JSON parse error (if parsing failed) |
+
+### Env Loader
+
+Load `.env` values:
+
+```lua
+local secrets = env()
+local base_url = secrets:require("BASE_URL")
+local token = secrets:get("API_TOKEN", "dev-token")
+```
+
+Pass a custom path when needed:
+
+```lua
+local ci = env(".env.ci")
+```
+
+Available methods:
+
+| Method | Description |
+|---|---|
+| `:get("KEY", "default?")` | Returns the value or `nil`/default when missing. Falls back to the process environment |
+| `:require("KEY")` | Returns the value or raises an error when missing |
+| `:reload()` | Re-reads the file from disk |
+| `:all()` | Returns all loaded key/value pairs from the file |
 
 ## Example
 

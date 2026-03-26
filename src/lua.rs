@@ -4,7 +4,7 @@ use mlua::Variadic;
 use mlua::prelude::*;
 use tokio::time::sleep;
 
-use crate::{expect::Expect, http::client::HttpClient, registry::TestRegistry};
+use crate::{env::Env, expect::Expect, http::client::HttpClient, registry::TestRegistry};
 
 pub fn setup_lua(registry: TestRegistry) -> Result<Lua, Box<dyn std::error::Error>> {
     let lua = Lua::new();
@@ -33,6 +33,11 @@ pub fn setup_lua(registry: TestRegistry) -> Result<Lua, Box<dyn std::error::Erro
         Ok(http_client)
     })?;
 
+    let env_fn = lua.create_function(|_, path: Option<String>| {
+        Env::load(path.unwrap_or_else(|| Env::default_path().to_string()))
+            .map_err(|err| mlua::Error::RuntimeError(err.to_string()))
+    })?;
+
     let log_fn = lua.create_function(|_, values: Variadic<LuaValue>| {
         let line = values
             .into_iter()
@@ -49,6 +54,7 @@ pub fn setup_lua(registry: TestRegistry) -> Result<Lua, Box<dyn std::error::Erro
     })?;
 
     globals.set("http", http_fn)?;
+    globals.set("env", env_fn)?;
     globals.set("test", test_fn)?;
     globals.set("expect", expect_fn)?;
     globals.set("log", log_fn)?;
@@ -150,5 +156,47 @@ fn parse_lua_error_message(msg: &str) -> Option<(String, String)> {
         Some((format!("{file}:{line_num}"), message.to_string()))
     } else {
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::setup_lua;
+    use crate::registry::TestRegistry;
+    use std::{
+        fs,
+        time::{SystemTime, UNIX_EPOCH},
+    };
+    use tokio::runtime::Runtime;
+
+    #[test]
+    fn setup_lua_registers_env_helper() {
+        let env_path = std::env::temp_dir().join(format!(
+            "hutc-lua-env-{}.env",
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::write(&env_path, "TOKEN=from_file\n").unwrap();
+
+        let runtime = Runtime::new().unwrap();
+        runtime.block_on(async {
+            let lua = setup_lua(TestRegistry::new()).unwrap();
+            let token: String = lua
+                .load(format!(
+                    r#"
+                    local env_file = env("{}")
+                    return env_file:require("TOKEN")
+                    "#,
+                    env_path.display()
+                ))
+                .eval_async()
+                .await
+                .unwrap();
+            assert_eq!(token, "from_file");
+        });
+
+        let _ = fs::remove_file(env_path);
     }
 }

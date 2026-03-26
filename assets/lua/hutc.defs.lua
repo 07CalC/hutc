@@ -34,6 +34,29 @@
 ---@class HttpClient
 HttpClient = {}
 
+---Environment loader for `.env` style files.
+---@class Env
+Env = {}
+
+---Return a value from the env file, falling back to the process environment.
+---@param key string
+---@param default? string
+---@return string?
+function Env:get(key, default) end
+
+---Return a value or raise an error if it is missing from both the env file and process environment.
+---@param key string
+---@return string
+function Env:require(key) end
+
+---Reload values from disk.
+---@return Env
+function Env:reload() end
+
+---Return all key/value pairs loaded from the env file.
+---@return StringMap
+function Env:all() end
+
 ---Set a base URL used by `RequestBuilder:path(...)`.
 ---@param url string
 ---@return HttpClient
@@ -208,6 +231,11 @@ function expect(value) end
 ---Create a new HTTP client.
 ---@return HttpClient
 function http() end
+
+---Load a `.env` style file. Defaults to `.env`.
+---@param path? string
+---@return Env
+function env(path) end
 
 ---Print debug values to stdout.
 ---@param ... any
